@@ -1,3 +1,0 @@
-com.searchbox.test
-style WhiteBackgroundDialogTheme
-style WhiteBackgroundTheme
