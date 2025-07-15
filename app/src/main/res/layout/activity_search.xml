@@ -50,6 +50,16 @@
 
     </LinearLayout>
 
+    <!-- Loading Progress Bar -->
+    <ProgressBar
+        android:id="@+id/loading_progress_bar"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="center"
+        android:layout_marginTop="48dp"
+        android:visibility="gone"
+        style="?android:attr/progressBarStyle" />
+
     <!-- App List -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/apps_recycler_view"

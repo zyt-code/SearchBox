@@ -2,6 +2,7 @@ package com.searchbox;
 
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -9,6 +10,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -25,6 +27,7 @@ public class SearchActivity extends AppCompatActivity {
     private ImageView clearButton;
     private RecyclerView appsRecyclerView;
     private LinearLayout emptyState;
+    private ProgressBar loadingProgressBar;
     private AppAdapter appAdapter;
     private List<AppInfo> allApps;
 
@@ -44,6 +47,7 @@ public class SearchActivity extends AppCompatActivity {
         clearButton = findViewById(R.id.clear_button);
         appsRecyclerView = findViewById(R.id.apps_recycler_view);
         emptyState = findViewById(R.id.empty_state);
+        loadingProgressBar = findViewById(R.id.loading_progress_bar);
         
         // Focus on search input when activity starts
         searchInput.requestFocus();
@@ -55,39 +59,61 @@ public class SearchActivity extends AppCompatActivity {
     }
 
     private void loadInstalledApps() {
-        allApps = new ArrayList<>();
-        PackageManager packageManager = getPackageManager();
+        // Show loading indicator
+        loadingProgressBar.setVisibility(View.VISIBLE);
+        appsRecyclerView.setVisibility(View.GONE);
+        emptyState.setVisibility(View.GONE);
         
-        List<ApplicationInfo> installedApps = packageManager.getInstalledApplications(
-            PackageManager.GET_META_DATA);
-        
-        for (ApplicationInfo appInfo : installedApps) {
-            // Only include apps that can be launched (have a launcher intent)
-            if (packageManager.getLaunchIntentForPackage(appInfo.packageName) != null) {
-                String appName = appInfo.loadLabel(packageManager).toString();
-                String packageName = appInfo.packageName;
-                
-                try {
-                    AppInfo app = new AppInfo(
-                        appName,
-                        packageName,
-                        appInfo.loadIcon(packageManager)
-                    );
-                    allApps.add(app);
-                } catch (Exception e) {
-                    // Skip apps that can't load icon
+        // Load apps in background thread
+        new LoadAppsTask().execute();
+    }
+    
+    private class LoadAppsTask extends AsyncTask<Void, Void, List<AppInfo>> {
+        @Override
+        protected List<AppInfo> doInBackground(Void... voids) {
+            List<AppInfo> apps = new ArrayList<>();
+            PackageManager packageManager = getPackageManager();
+            
+            List<ApplicationInfo> installedApps = packageManager.getInstalledApplications(
+                PackageManager.GET_META_DATA);
+            
+            for (ApplicationInfo appInfo : installedApps) {
+                // Only include apps that can be launched (have a launcher intent)
+                if (packageManager.getLaunchIntentForPackage(appInfo.packageName) != null) {
+                    String appName = appInfo.loadLabel(packageManager).toString();
+                    String packageName = appInfo.packageName;
+                    
+                    try {
+                        AppInfo app = new AppInfo(
+                            appName,
+                            packageName,
+                            appInfo.loadIcon(packageManager)
+                        );
+                        apps.add(app);
+                    } catch (Exception e) {
+                        // Skip apps that can't load icon
+                    }
                 }
             }
+            
+            // Sort apps alphabetically
+            apps.sort((app1, app2) -> app1.getAppName().compareToIgnoreCase(app2.getAppName()));
+            
+            return apps;
         }
         
-        // Sort apps alphabetically
-        allApps.sort((app1, app2) -> app1.getAppName().compareToIgnoreCase(app2.getAppName()));
-        
-        // Initialize adapter with all apps
-        appAdapter = new AppAdapter(this, allApps);
-        appsRecyclerView.setAdapter(appAdapter);
-        
-        updateEmptyState();
+        @Override
+        protected void onPostExecute(List<AppInfo> apps) {
+            allApps = apps;
+            
+            // Initialize adapter with all apps
+            appAdapter = new AppAdapter(SearchActivity.this, allApps);
+            appsRecyclerView.setAdapter(appAdapter);
+            
+            // Hide loading indicator and show content
+            loadingProgressBar.setVisibility(View.GONE);
+            updateEmptyState();
+        }
     }
 
     private void setupSearchFunctionality() {
