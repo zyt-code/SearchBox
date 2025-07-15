@@ -31,10 +31,7 @@ public class SearchWidgetProvider extends AppWidgetProvider {
         );
         
         // Set click listener for the entire widget layout
-        views.setOnClickPendingIntent(R.id.search_text, pendingIntent);
-        
-        // Also set click listener for the search icon
-        views.setOnClickPendingIntent(R.id.search_icon, pendingIntent);
+        views.setOnClickPendingIntent(R.id.widget_layout, pendingIntent);
         
         // Update the widget
         appWidgetManager.updateAppWidget(appWidgetId, views);

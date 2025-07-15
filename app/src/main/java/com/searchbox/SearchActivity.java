@@ -139,4 +139,11 @@ public class SearchActivity extends AppCompatActivity {
         super.onBackPressed();
         finish();
     }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // Close the activity when user returns to desktop
+        finish();
+    }
 }
