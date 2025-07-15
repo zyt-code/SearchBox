@@ -10,11 +10,19 @@
     
     <!-- Light mode specific colors -->
     <color name="surface_light">#FFFFFFFF</color>
+    <color name="surface_dark">#FF121212</color>
+    <color name="surface_variant_dark">#FF1E1E1E</color>
     <color name="on_surface_light">#FF000000</color>
+    <color name="on_surface_dark">#FFFFFFFF</color>
+    <color name="on_surface_variant_dark">#FFCCCCCC</color>
     <color name="outline_light">#FF666666</color>
+    <color name="outline_dark">#FF444444</color>
     
     <!-- Widget colors for light mode -->
     <color name="widget_background_light">#FFF2F2F2</color>
+    <color name="widget_background_dark">#FF2D2D2D</color>
     <color name="widget_text_light">#FF666666</color>
-    <color name="widget_icon_light">#FF444444</color>
+    <color name="widget_text_dark">#FFCCCCCC</color>
+    <color name="widget_icon_light">#FF222222</color>
+    <color name="widget_icon_dark">#FFFFFFFF</color>
 </resources>
