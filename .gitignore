@@ -113,3 +113,7 @@ Thumbs.db
 
 # virtual machine crash logs
 hs_err_pid*
+
+# jks
+*.jks.gradle/
+app/build/outputs/apk/release/
