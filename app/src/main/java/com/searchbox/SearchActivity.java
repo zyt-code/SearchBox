@@ -81,12 +81,7 @@ public class SearchActivity extends AppCompatActivity {
         }
         
         // Sort apps alphabetically
-        Collections.sort(allApps, new Comparator<AppInfo>() {
-            @Override
-            public int compare(AppInfo app1, AppInfo app2) {
-                return app1.getAppName().compareToIgnoreCase(app2.getAppName());
-            }
-        });
+        allApps.sort((app1, app2) -> app1.getAppName().compareToIgnoreCase(app2.getAppName()));
         
         // Initialize adapter with all apps
         appAdapter = new AppAdapter(this, allApps);
