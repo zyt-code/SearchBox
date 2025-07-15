@@ -1,0 +1,6 @@
+com.searchbox.test.app-annotation-experimental-1.3.0-0 /Users/zhangyutong/.gradle/caches/8.9/transforms/676acafa7755a2c5a2d865f6e72f10d1/transformed/annotation-experimental-1.3.0/res
+com.searchbox.test.app-core-1.5.0-1 /Users/zhangyutong/.gradle/caches/8.9/transforms/bb6db92f121e2cc1d39ae221bf942e0e/transformed/core-1.5.0/res
+com.searchbox.test.app-androidTest-2 /Users/zhangyutong/VscodeProjects/SearchBox/app/build/generated/res/resValues/androidTest/debug
+com.searchbox.test.app-mergeDebugAndroidTestResources-3 /Users/zhangyutong/VscodeProjects/SearchBox/app/build/intermediates/incremental/debugAndroidTest/mergeDebugAndroidTestResources/merged.dir
+com.searchbox.test.app-mergeDebugAndroidTestResources-4 /Users/zhangyutong/VscodeProjects/SearchBox/app/build/intermediates/incremental/debugAndroidTest/mergeDebugAndroidTestResources/stripped.dir
+com.searchbox.test.app-debugAndroidTest-5 /Users/zhangyutong/VscodeProjects/SearchBox/app/build/intermediates/merged_res/debugAndroidTest/mergeDebugAndroidTestResources

@@ -1,0 +1,34 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.searchbox.app-mergeDebugResources-30:/values-v14/values-v14.xml",
+            "map": [
+                {
+                    "source": "/Users/zhangyutong/VscodeProjects/SearchBox/app/src/main/res/values-v14/dimens.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "43",
+                        "endOffsets": "94"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "/Users/zhangyutong/.gradle/daemon/8.9/com.searchbox.app-mergeDebugResources-30:/values-v14/values-v14.xml",
+            "map": [
+                {
+                    "source": "/Users/zhangyutong/VscodeProjects/SearchBox/app/src/main/res/values-v14/dimens.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "43",
+                        "endOffsets": "94"
+                    }
+                }
+            ]
+        }
+    ]
+}

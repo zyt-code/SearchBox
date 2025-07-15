@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">SearchBox</string>
+    <string name="widget_description">Desktop Search Widget</string>
+    <string name="search_hint">Search apps</string>
+    <string name="search_apps_hint">Search installed apps...</string>
+    <string name="search_icon_desc">Search icon</string>
+    <string name="app_icon_desc">App icon</string>
+    <string name="clear_search_desc">Clear search</string>
+    <string name="no_apps_found">No apps found</string>
+</resources>
