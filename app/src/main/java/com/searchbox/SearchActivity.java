@@ -2,7 +2,6 @@ package com.searchbox;
 
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -17,30 +16,34 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class SearchActivity extends AppCompatActivity {
-    
+
     private EditText searchInput;
     private ImageView clearButton;
     private RecyclerView appsRecyclerView;
     private LinearLayout emptyState;
     private ProgressBar loadingProgressBar;
     private AppAdapter appAdapter;
-    private List<AppInfo> allApps;
+    private List<AppInfo> allApps = new ArrayList<>();
+
+    // 是否已加载过系统 App
+    private boolean appsLoaded = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
-        
+
         initViews();
         setupRecyclerView();
-        loadInstalledApps();
         setupSearchFunctionality();
     }
+
+    /* ---------------- 初始化 ---------------- */
 
     private void initViews() {
         searchInput = findViewById(R.id.search_input);
@@ -48,123 +51,119 @@ public class SearchActivity extends AppCompatActivity {
         appsRecyclerView = findViewById(R.id.apps_recycler_view);
         emptyState = findViewById(R.id.empty_state);
         loadingProgressBar = findViewById(R.id.loading_progress_bar);
-        
-        // Focus on search input when activity starts
-        searchInput.requestFocus();
+
+        searchInput.requestFocus();      // 自动弹出键盘
     }
 
     private void setupRecyclerView() {
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-        appsRecyclerView.setLayoutManager(layoutManager);
+        appsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
     }
 
-    private void loadInstalledApps() {
-        // Show loading indicator
-        loadingProgressBar.setVisibility(View.VISIBLE);
-        appsRecyclerView.setVisibility(View.GONE);
-        emptyState.setVisibility(View.GONE);
-        
-        // Load apps in background thread
-        new LoadAppsTask().execute();
-    }
-    
-    private class LoadAppsTask extends AsyncTask<Void, Void, List<AppInfo>> {
-        @Override
-        protected List<AppInfo> doInBackground(Void... voids) {
-            List<AppInfo> apps = new ArrayList<>();
-            PackageManager packageManager = getPackageManager();
-            
-            List<ApplicationInfo> installedApps = packageManager.getInstalledApplications(
-                PackageManager.GET_META_DATA);
-            
-            for (ApplicationInfo appInfo : installedApps) {
-                // Only include apps that can be launched (have a launcher intent)
-                if (packageManager.getLaunchIntentForPackage(appInfo.packageName) != null) {
-                    String appName = appInfo.loadLabel(packageManager).toString();
-                    String packageName = appInfo.packageName;
-                    
-                    try {
-                        AppInfo app = new AppInfo(
-                            appName,
-                            packageName,
-                            appInfo.loadIcon(packageManager)
-                        );
-                        apps.add(app);
-                    } catch (Exception e) {
-                        // Skip apps that can't load icon
-                    }
-                }
-            }
-            
-            // Sort apps alphabetically
-            apps.sort((app1, app2) -> app1.getAppName().compareToIgnoreCase(app2.getAppName()));
-            
-            return apps;
-        }
-        
-        @Override
-        protected void onPostExecute(List<AppInfo> apps) {
-            allApps = apps;
-            
-            // Initialize adapter with all apps
-            appAdapter = new AppAdapter(SearchActivity.this, allApps);
-            appsRecyclerView.setAdapter(appAdapter);
-            
-            // Hide loading indicator and show content
-            loadingProgressBar.setVisibility(View.GONE);
-            updateEmptyState();
-        }
-    }
+    /* ---------------- 搜索 & 加载逻辑 ---------------- */
 
     private void setupSearchFunctionality() {
         searchInput.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            public void beforeTextChanged(CharSequence s, int a, int b, int c) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 String query = s.toString().trim();
-                
-                // Show/hide clear button
+
+                // 显示/隐藏清空按钮
                 clearButton.setVisibility(query.isEmpty() ? View.GONE : View.VISIBLE);
-                
-                // Filter apps
-                if (appAdapter != null) {
+
+                if (query.isEmpty()) {
+                    // 用户清空了输入：展示空提示、隐藏列表
+                    if (appAdapter != null) appAdapter.filter("");   // 清空
+                    updateEmptyState();
+                    return;
+                }
+
+                // 首次输入 -> 加载
+                if (!appsLoaded) {
+                    loadAppsThenFilter(query);
+                } else {
+                    // 已加载 -> 直接过滤
                     appAdapter.filter(query);
                     updateEmptyState();
                 }
             }
-
-            @Override
-            public void afterTextChanged(Editable s) {}
         });
-        
-        // Clear button functionality
+
         clearButton.setOnClickListener(v -> {
             searchInput.setText("");
             searchInput.requestFocus();
         });
     }
 
-    private void updateEmptyState() {
-        if (appAdapter != null) {
-            boolean isEmpty = appAdapter.getFilteredCount() == 0;
-            emptyState.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
-            appsRecyclerView.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
-        }
+    /* ---------------- 异步加载 ---------------- */
+
+    private void loadAppsThenFilter(String query) {
+        loadingProgressBar.setVisibility(View.VISIBLE);
+        appsRecyclerView.setVisibility(View.GONE);
+        emptyState.setVisibility(View.GONE);
+
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.execute(() -> {
+            List<AppInfo> apps = loadAppsSynchronously();
+            runOnUiThread(() -> {
+                appsLoaded = true;
+                allApps = apps;
+
+                appAdapter = new AppAdapter(SearchActivity.this, allApps);
+                appsRecyclerView.setAdapter(appAdapter);
+
+                loadingProgressBar.setVisibility(View.GONE);
+                appAdapter.filter(query);   // 用当前输入过滤
+                updateEmptyState();
+            });
+        });
     }
 
-    @Override
-    public void onBackPressed() {
-        // Close the activity when back is pressed
-        super.onBackPressed();
-        finish();
+    private List<AppInfo> loadAppsSynchronously() {
+        List<AppInfo> apps = new ArrayList<>();
+        PackageManager pm = getPackageManager();
+        List<ApplicationInfo> installedApps = pm.getInstalledApplications(
+                PackageManager.GET_META_DATA);
+
+        for (ApplicationInfo info : installedApps) {
+            if (pm.getLaunchIntentForPackage(info.packageName) != null) {
+                try {
+                    apps.add(new AppInfo(
+                            info.loadLabel(pm).toString(),
+                            info.packageName,
+                            info.loadIcon(pm)
+                    ));
+                } catch (Exception ignore) {
+                }
+            }
+        }
+
+        // 按名称排序
+        apps.sort((a, b) -> a.getAppName().compareToIgnoreCase(b.getAppName()));
+        return apps;
     }
+
+    /* ---------------- UI 辅助 ---------------- */
+
+    private void updateEmptyState() {
+        if (appAdapter == null) return;
+        boolean isEmpty = appAdapter.getFilteredCount() == 0;
+        emptyState.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
+        appsRecyclerView.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
+    }
+
+    /* ---------------- 生命周期 ---------------- */
 
     @Override
     protected void onPause() {
         super.onPause();
-        // Close the activity when user returns to desktop
-        finish();
+        finish();   // 按 Home 键返回桌面时直接关闭
     }
 }
